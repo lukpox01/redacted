@@ -5,6 +5,7 @@ use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use serde::Deserialize;
+use std::collections::{HashMap, VecDeque};
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::ops::Index;
@@ -31,14 +32,34 @@ struct Agent {
     hostname: String,
     mac: String,
     ip: String,
-    id: Uuid,
 }
 
-type Agents = Arc<Mutex<Vec<Agent>>>;
+struct Task {
+    command: String,
+}
+
+type AgentId = Uuid;
+type TaskId = Uuid;
+
+struct State {
+    agents: HashMap<AgentId, Agent>,
+    tasks: HashMap<TaskId, Task>,
+    tasks_by_agents: HashMap<AgentId, VecDeque<TaskId>>,
+}
+
+impl State {
+    fn new() -> Self {
+        State {
+            agents: HashMap::new(),
+            tasks: HashMap::new(),
+            tasks_by_agents: HashMap::new(),
+        }
+    }
+}
 
 async fn handle_request(
     req: Request<hyper::body::Incoming>,
-    agents: Agents,
+    state: Arc<Mutex<State>>,
 ) -> Result<Response<Full<Bytes>>, Infallible> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/checkin") => {
@@ -58,18 +79,18 @@ async fn handle_request(
             match check_in {
                 Ok(parsed_content) => {
                     let agent_id = {
-                        let mut guard = agents.lock().unwrap();
+                        let mut guard = state.lock().unwrap();
                         let agent = Agent {
                             os: parsed_content.os,
                             hostname: parsed_content.hostname,
                             mac: parsed_content.mac,
                             ip: parsed_content.ip,
-                            id: Uuid::new_v4(),
                         };
-                        guard.push(agent);
-                        guard.last().unwrap().id
+                        let uuid_v4 = Uuid::new_v4();
+                        guard.agents.insert(uuid_v4, agent);
+                        uuid_v4
                     };
-                    println!("{:#?}", Arc::clone(&agents));
+                    println!("{:#?}", Arc::clone(&state).lock().unwrap().agents);
                     Ok(Response::new(Full::new(Bytes::from(agent_id.to_string()))))
                 }
                 Err(_) => {
@@ -99,14 +120,37 @@ async fn handle_request(
                 Ok(parsed_beacon) => {
                     println!("Received beacon: {:?}", parsed_beacon);
                     let agent = {
-                        let guard = agents.lock().unwrap();
-                        let idx = guard
-                            .iter()
-                            .position(|pos| pos.id.to_string() == parsed_beacon.id)
-                            .unwrap();
-                        guard[idx].mac.clone()
+                        let guard = state.lock().unwrap();
+                        let uuid_v4 = match Uuid::parse_str(parsed_beacon.id.as_str()) {
+                            Ok(val) => val,
+                            Err(_) => {
+                                let mut bad_request = Response::new(Full::new(Bytes::from(
+                                    "Bad Request: Invalid format of Uuid",
+                                )));
+                                *bad_request.status_mut() = StatusCode::BAD_REQUEST;
+                                return Ok(bad_request);
+                            }
+                        };
+                        match guard.agents.get(&uuid_v4) {
+                            Some(agent) => Agent {
+                                os: agent.os.clone(),
+                                hostname: agent.hostname.clone(),
+                                mac: agent.mac.clone(),
+                                ip: agent.ip.clone(),
+                            },
+                            None => {
+                                let mut bad_request = Response::new(Full::new(Bytes::from(
+                                    "Bad Request: Invalid AgentId",
+                                )));
+                                *bad_request.status_mut() = StatusCode::BAD_REQUEST;
+                                return Ok(bad_request);
+                            }
+                        }
                     };
-                    Ok(Response::new(Full::new(Bytes::from(agent))))
+                    Ok(Response::new(Full::new(Bytes::from(format!(
+                        "agent found thanks to you \n{:#?}",
+                        agent
+                    )))))
                 }
                 Err(e) => {
                     println!("Failed to parse beacon: {}", e);
@@ -131,16 +175,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     let listener = TcpListener::bind(addr).await?;
     println!("Listening on http://{}", addr);
-    let agents: Agents = Arc::new(Mutex::new(Vec::new()));
+    let state = Arc::new(Mutex::new(State::new()));
     // The new server loop. It spawns a task for each incoming connection.
     loop {
-        let agents = Arc::clone(&agents);
+        let state = Arc::clone(&state);
         let (stream, _) = listener.accept().await?;
         let io = TokioIo::new(stream);
 
         let svc = service_fn(move |req| {
-            let agents = Arc::clone(&agents);
-            handle_request(req, agents)
+            let state = Arc::clone(&state);
+            handle_request(req, state)
         });
 
         tokio::task::spawn(async move {

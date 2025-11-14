@@ -28,7 +28,8 @@
           buildInputs = [
             # The full, stable Rust toolchain [attached_file:1]
             rust-bin.stable.latest.default
-
+            rust-analyzer
+            posting
             # Common dependencies for Rust projects
             openssl
             pkg-config

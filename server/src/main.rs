@@ -252,6 +252,13 @@ async fn handle_request(
             };
             handle_add_task(addtask, Arc::clone(&state))
         }
+        (&Method::GET, "/list") => {
+            let lock = state.lock().unwrap();
+            return Ok(Response::new(Full::new(Bytes::from(format!(
+                "{:#?}",
+                lock.agents,
+            )))));
+        }
         _ => {
             let mut not_found = Response::new(Full::new(Bytes::from("Not Found")));
             *not_found.status_mut() = StatusCode::NOT_FOUND;

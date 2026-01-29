@@ -1,0 +1,40 @@
+warning: field `created_at` is never read
+  --> src/main.rs:33:5
+   |
+30 | struct TaskInfo {
+   |        -------- field in this struct
+...
+33 |     created_at: DateTime<Utc>,
+   |     ^^^^^^^^^^
+   |
+   = note: `TaskInfo` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `output`, `exit_code`, and `completed_at` are never read
+  --> src/main.rs:39:5
+   |
+38 | struct TaskResult {
+   |        ---------- fields in this struct
+39 |     output: String,
+   |     ^^^^^^
+40 |     exit_code: i32,
+   |     ^^^^^^^^^
+41 |     completed_at: DateTime<Utc>,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `TaskResult` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `redacted` (bin "redacted") generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target/debug/redacted`
+[*] C2 Server listening on http://127.0.0.1:8080
+[*] Endpoints:
+    POST   /register      - Register new agent
+    POST   /beacon        - Agent check-in
+    POST   /task_result   - Submit task results
+    POST   /add_task      - Queue task for agent (password: admin)
+    GET    /agents        - List all agents
+[*] POST /register
+[+] New agent registered: 9476f1a3-d871-4fc1-b59f-89b3ecd25d49
+[*] POST /beacon
+[*] GET /agents

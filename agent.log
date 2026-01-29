@@ -1,0 +1,6 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target/debug/agent`
+[*] Agent starting...
+[*] Attempting to register with server...
+[+] Registered with server. Agent ID: 9476f1a3-d871-4fc1-b59f-89b3ecd25d49
+[*] No tasks available

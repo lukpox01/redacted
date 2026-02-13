@@ -4,6 +4,13 @@ A Windows-specific management agent with protocol-based commands for school comp
 
 ## Features
 
+### GUI Button Window
+- **Interactive Desktop Button**: When the agent starts, a visible GUI window appears with a button
+- **Quick Web Access**: Click the "Open Web Page" button to instantly open a pre-configured website
+- **Default URL**: Opens https://www.google.com (can be customized in the code)
+- **Always Available**: The button window remains visible while the agent is running
+- **Non-blocking**: Runs in a separate thread, doesn't interfere with agent operations
+
 ### Dual-Mode Operation
 - **School Orchestration Mode**: Family-friendly presentation for educational demonstrations
 - **Red Team C2 Mode**: Technical C2 framework operations
@@ -88,6 +95,16 @@ PROTOCOL:REVERT_ALL
 - Re-enables Task Manager
 - Returns system to normal operation
 
+## Customizing the GUI Button
+
+The GUI button's web page URL can be customized by modifying the `DEFAULT_URL` constant in `src/gui_button.rs`:
+
+```rust
+const DEFAULT_URL: &str = "https://www.google.com";
+```
+
+Change this to any URL you want the button to open (e.g., a school portal, help page, or administration dashboard).
+
 ## Building
 
 ### Windows (Cross-compile from Linux)
@@ -125,6 +142,8 @@ The compiled agent will be at:
    - Copy `agent-windows.exe` to student computers
    - Run the agent (can be installed as a service)
    - Agent connects to management server
+   - **GUI Window**: A small window with "Open Web Page" button will appear on each computer
+   - Users can click the button to access the configured web page instantly
 
 3. **Use Protocols for Class Management**
    ```bash

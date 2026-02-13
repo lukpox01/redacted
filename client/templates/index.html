@@ -348,6 +348,35 @@
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
             background: rgba(0, 255, 0, 0.1);
         }
+        
+        .test-reactivity-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 12rem;
+            background: #000;
+            color: #ff0;
+            border: 2px solid #ff0;
+            padding: 1rem 2rem;
+            border-radius: 0;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.4);
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .test-reactivity-btn::before {
+            content: '⚡ ';
+        }
+        
+        .test-reactivity-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.6);
+            background: rgba(255, 255, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -413,6 +442,9 @@
         {% endif %}
     </div>
     
+    <form method="post" action="/test_reactivity" style="display: inline;">
+        <button type="submit" class="test-reactivity-btn">Test Reactivity</button>
+    </form>
     <button class="refresh-btn" onclick="window.location.reload()">Refresh</button>
 </body>
 </html>

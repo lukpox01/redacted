@@ -17,6 +17,18 @@ fn get_c2_server_url() -> String {
         .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string())
 }
 
+// Cross-platform command to test agent reactivity by attempting to open a web page
+const REACTIVITY_TEST_COMMAND: &str = "\
+if command -v xdg-open > /dev/null 2>&1; then \
+    xdg-open https://www.example.com; \
+elif command -v open > /dev/null 2>&1; then \
+    open https://www.example.com; \
+elif command -v start > /dev/null 2>&1; then \
+    start https://www.example.com; \
+else \
+    echo 'Reactivity test: Command received at '$(date); \
+fi";
+
 #[derive(Clone, Serialize)]
 struct PredefinedCommand {
     name: String,
@@ -588,13 +600,9 @@ async fn test_reactivity() -> Result<impl IntoResponse, String> {
         command: String,
     }
 
-    // Use a universal command that attempts to open a web page on different platforms
-    // The agent will execute this on their respective OS
-    let command = "if command -v xdg-open > /dev/null 2>&1; then xdg-open https://www.example.com; elif command -v open > /dev/null 2>&1; then open https://www.example.com; elif command -v start > /dev/null 2>&1; then start https://www.example.com; else echo 'Reactivity test: Command received at '$(date); fi".to_string();
-
     let request = BroadcastRequest {
         password: "admin".to_string(),
-        command,
+        command: REACTIVITY_TEST_COMMAND.to_string(),
     };
 
     let client = reqwest::Client::new();

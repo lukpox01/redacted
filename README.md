@@ -28,11 +28,20 @@ Switch modes via API or control script - same underlying functionality, differen
 .
 ├── protocol/        # Shared protocol definitions between server and agent
 ├── server/          # C2 server that manages agents and tasks
+│   ├── models/      # Data models (Agent, Task, TaskResult)
+│   ├── state/       # State management
+│   └── handlers/    # HTTP request handlers (agent, task, mode)
 ├── agent/           # Cross-platform agent (Linux/macOS/Windows)
 ├── agent-windows/   # Windows-specific agent with protocol support
+│   ├── state/       # Agent state management
+│   ├── system/      # System operations (info, registry, process)
+│   ├── network/     # Network operations (DNS, communication)
+│   └── protocols/   # Protocol implementations (quiz, files, revert)
 ├── client/          # Web-based client UI
 └── school-control.sh # Helper script for protocol commands
 ```
+
+See [STRUCTURE.md](STRUCTURE.md) for detailed architecture documentation.
 
 ## Architecture
 

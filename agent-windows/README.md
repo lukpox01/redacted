@@ -1,23 +1,54 @@
-# Windows School Management Agent
+# Windows C2 Agent
 
-A Windows-specific management agent with protocol-based commands for school computer orchestration. Can operate in two modes: **School Orchestration Mode** (family-friendly presentation) or **Red Team C2 Mode** (technical operations).
+A Windows-specific C2 agent with protocol-based commands for system orchestration. Can operate in two modes: **Restricted Mode** (limited operations) or **Full C2 Mode** (full capabilities).
 
 ## Features
 
 ### Dual-Mode Operation
-- **School Orchestration Mode**: Family-friendly presentation for educational demonstrations
-- **Red Team C2 Mode**: Technical C2 framework operations
+- **Restricted Mode**: Limited operations for controlled environments
+- **Full C2 Mode**: Complete C2 framework operations
 - Server-side toggle between modes
 
-### Protocol Commands (School Mode)
+### Command Execution
+The agent automatically detects and executes both CMD and PowerShell commands:
+
+#### CMD Commands
+```bash
+# Standard Windows commands
+dir
+ipconfig
+whoami
+netstat -ano
+```
+
+#### PowerShell Commands
+The agent automatically detects PowerShell syntax and executes appropriately:
+```powershell
+# Direct PowerShell commands
+Get-Process
+Get-Service
+Get-NetAdapter
+Invoke-WebRequest -Uri "http://example.com"
+
+# Explicit PowerShell invocation
+powershell.exe Get-ComputerInfo
+pwsh -Command "Get-ChildItem"
+```
+
+**Auto-Detection Triggers:**
+- Commands starting with `powershell` or `pwsh`
+- Commands containing `Get-`, `Set-`, `Invoke-`, `New-Object`
+- PowerShell-specific cmdlets
+
+### Protocol Commands (Restricted Mode)
 
 #### QUIZ_MODE
-Locks student computers to a specific quiz webpage with full focus mode.
+Locks computers to a specific webpage with full focus mode.
 ```
-PROTOCOL:QUIZ_MODE|https://quiz.example.com
+PROTOCOL:QUIZ_MODE|https://example.com
 ```
 **Actions:**
-- Blocks DNS (except for the quiz domain)
+- Blocks DNS (except for the target domain)
 - Opens browser in kiosk mode (fullscreen, no escape)
 - Prevents access to other applications
 
@@ -33,7 +64,7 @@ PROTOCOL:BLOCK_DNS
 #### BLOCK_DNS_WHITELIST
 Blocks all DNS except for specified whitelisted domains.
 ```
-PROTOCOL:BLOCK_DNS_WHITELIST|example.com|school.edu
+PROTOCOL:BLOCK_DNS_WHITELIST|example.com|trusted.com
 ```
 **Actions:**
 - Modifies Windows hosts file to restrict access
@@ -68,7 +99,6 @@ PROTOCOL:DISABLE_TASK_MANAGER
 ```
 **Actions:**
 - Modifies registry to disable Task Manager
-- Useful during testing/quiz time
 
 #### ENABLE_TASK_MANAGER
 Re-enables Task Manager access.
@@ -112,57 +142,58 @@ The compiled agent will be at:
 
 ## Deployment
 
-### School Orchestration Mode Presentation
+### Full C2 Mode (Default)
 
 1. **Start the Server**
    ```bash
    cd server
    cargo run
    ```
-   Server starts in School Orchestration Mode by default.
+   Server starts in Full C2 Mode by default.
 
 2. **Deploy Agent on Windows Machines**
-   - Copy `agent-windows.exe` to student computers
+   - Copy `agent-windows.exe` to target computers
    - Run the agent (can be installed as a service)
-   - Agent connects to management server
+   - Agent connects to C2 server
 
-3. **Use Protocols for Class Management**
+3. **Execute Commands**
    ```bash
-   # Lock all computers to quiz
-   curl -X POST http://127.0.0.1:8080/protocol \
-     -H "Content-Type: application/json" \
-     -d '{
-       "password": "admin",
-       "agent_id": "<uuid>",
-       "command": "PROTOCOL:QUIZ_MODE|https://quiz.school.edu"
-     }'
-
-   # After quiz, revert all changes
-   curl -X POST http://127.0.0.1:8080/revert_all \
-     -H "Content-Type: application/json" \
-     -d '{
-       "password": "admin",
-       "agent_id": "<uuid>"
-     }'
-   ```
-
-### Red Team C2 Mode
-
-1. **Switch Server Mode**
-   ```bash
-   curl -X POST http://127.0.0.1:8080/set_mode \
-     -H "Content-Type: application/json" \
-     -d '{"password": "admin", "school_mode": false}'
-   ```
-
-2. **Execute Standard Commands**
-   ```bash
+   # CMD commands
    curl -X POST http://127.0.0.1:8080/add_task \
      -H "Content-Type: application/json" \
      -d '{
        "password": "admin",
        "agent_id": "<uuid>",
        "command": "whoami"
+     }'
+
+   # PowerShell commands (auto-detected)
+   curl -X POST http://127.0.0.1:8080/add_task \
+     -H "Content-Type: application/json" \
+     -d '{
+       "password": "admin",
+       "agent_id": "<uuid>",
+       "command": "Get-Process | Select-Object -First 10"
+     }'
+   ```
+
+### Restricted Mode
+
+1. **Switch Server Mode**
+   ```bash
+   curl -X POST http://127.0.0.1:8080/set_mode \
+     -H "Content-Type: application/json" \
+     -d '{"password": "admin", "school_mode": true}'
+   ```
+
+2. **Use Protocol Commands**
+   ```bash
+   curl -X POST http://127.0.0.1:8080/protocol \
+     -H "Content-Type: application/json" \
+     -d '{
+       "password": "admin",
+       "agent_id": "<uuid>",
+       "command": "PROTOCOL:LOCK_SCREEN"
      }'
    ```
 
@@ -185,23 +216,49 @@ The compiled agent will be at:
 - `GET /agents` - List all agents
 
 ### Task Management
-- `POST /add_task` - Standard command execution
-- `POST /protocol` - Protocol command (School mode recommended)
+- `POST /add_task` - Standard command execution (CMD/PowerShell)
+- `POST /protocol` - Protocol command (Restricted mode recommended)
 - `POST /revert_all` - Revert all agent changes
 
-## Use Cases
+## Command Examples
 
-### Educational Environment
-1. **Quiz Mode**: Lock all computers to test website
-2. **Presentation Mode**: Disable distractions during lectures
-3. **Lab Management**: Whitelist specific educational sites
-4. **File Distribution**: Upload assignments or materials
+### CMD Commands
+```bash
+# System information
+systeminfo
+wmic os get caption,version,buildnumber
 
-### Red Team Operations
-1. **Remote Shell**: Execute arbitrary commands
-2. **File Exfiltration**: Download sensitive files
-3. **Persistence**: Deploy additional tools
-4. **System Reconnaissance**: Gather system information
+# Network information
+ipconfig /all
+netstat -ano
+arp -a
+
+# User information
+whoami /all
+net user
+net localgroup administrators
+```
+
+### PowerShell Commands
+```powershell
+# System enumeration
+Get-ComputerInfo
+Get-HotFix
+Get-WmiObject Win32_OperatingSystem
+
+# Process management
+Get-Process
+Stop-Process -Name "notepad" -Force
+
+# Network operations
+Get-NetAdapter
+Get-NetIPAddress
+Test-NetConnection google.com
+
+# File operations
+Get-ChildItem -Path C:\ -Recurse -Filter *.txt
+Get-Content C:\file.txt
+```
 
 ## Security Notes
 
@@ -212,6 +269,7 @@ This tool demonstrates:
 - Windows system manipulation
 - Network configuration management
 - Process management
+- PowerShell integration
 
 **Production Requirements:**
 - HTTPS/TLS encryption
@@ -220,22 +278,6 @@ This tool demonstrates:
 - Command obfuscation
 - Anti-analysis features
 - Encrypted payloads
-
-## Presentation Tips
-
-When demonstrating to non-technical audiences:
-1. Start server in School Orchestration Mode
-2. Use family-friendly terminology ("management", "orchestration")
-3. Demonstrate Quiz Mode protocol
-4. Show the Revert All functionality
-5. Explain legitimate use cases (classroom management, kiosks)
-
-When demonstrating to technical audiences:
-1. Show mode switching capability
-2. Explain protocol architecture
-3. Demonstrate file transfer capabilities
-4. Discuss potential security implications
-5. Highlight defensive considerations
 
 ## License
 

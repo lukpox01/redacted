@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[ REDACTED ] - Broadcast Task</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier Prime', 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 0, 0.03) 0px,
+                    transparent 1px,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 3px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        body > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header {
+            background: #000;
+            border: 2px solid #ff0;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), inset 0 0 20px rgba(255, 255, 0, 0.05);
+            position: relative;
+            margin: 1.5rem;
+            margin-bottom: 0;
+        }
+        
+        .header::before {
+            content: '█████████ BROADCAST MODE █████████';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            padding: 0 1rem;
+            font-size: 0.7rem;
+            color: #ff0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        
+        .back-link {
+            color: #0f0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .back-link::before {
+            content: '<<';
+        }
+        
+        .back-link:hover {
+            text-shadow: 0 0 10px #0f0;
+            transform: translateX(-4px);
+        }
+        
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title h1 {
+            color: #ff0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px #ff0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .header-title h1::before {
+            content: '>> ';
+        }
+        
+        .warning-badge {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid #f00;
+            background: rgba(255, 0, 0, 0.1);
+            color: #f00;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .broadcast-section {
+            background: #000;
+            border: 2px solid #ff0;
+            padding: 2rem;
+            padding-top: 2.5rem;
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.2), inset 0 0 20px rgba(255, 255, 0, 0.05);
+            position: relative;
+            overflow: visible;
+        }
+        
+        .broadcast-section::before {
+            content: '█ BROADCAST CONTROL █';
+            position: absolute;
+            top: -8px;
+            left: 1rem;
+            background: #000;
+            padding: 0 0.5rem;
+            font-size: 0.7rem;
+            color: #ff0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        
+        .warning-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #f00;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .warning-message h3 {
+            color: #f00;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px #f00;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .warning-message h3::before {
+            content: '⚠ ';
+        }
+        
+        .warning-message h3::after {
+            content: ' ⚠';
+        }
+        
+        .warning-message p {
+            color: #ff0;
+            font-size: 0.95rem;
+        }
+
+        .predefined-commands {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff0;
+            border-radius: 0;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 0 20px rgba(255, 255, 0, 0.05);
+        }
+
+        .predefined-header {
+            color: #ff0;
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+        
+        .predefined-header::before {
+            content: '// ';
+        }
+
+        .command-categories {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .category-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .category-title {
+            color: #ff0;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px #ff0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .category-title::before {
+            content: '[ ';
+        }
+        
+        .category-title::after {
+            content: ' ]';
+        }
+
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .command-btn {
+            background: #000;
+            border: 1px solid #ff0;
+            color: #ff0;
+            padding: 0.7rem 1rem;
+            border-radius: 0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.05);
+            font-family: 'Courier Prime', monospace;
+        }
+        
+        .command-btn::before {
+            content: '>';
+            position: absolute;
+            left: 0.5rem;
+            color: #aa0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .command-btn:hover {
+            border-color: #ff0;
+            background: rgba(255, 255, 0, 0.05);
+            transform: translateX(4px);
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3), inset 0 0 15px rgba(255, 255, 0, 0.1);
+        }
+        
+        .command-btn:hover::before {
+            opacity: 1;
+        }
+
+        .command-btn-name {
+            display: block;
+            font-weight: 700;
+            color: #ff0;
+            margin-bottom: 0.2rem;
+            text-shadow: 0 0 5px #ff0;
+            padding-left: 1rem;
+        }
+
+        .command-btn-desc {
+            display: block;
+            font-size: 0.7rem;
+            color: #aa0;
+            padding-left: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .form-group input {
+            flex: 1;
+            background: #000;
+            border: 2px solid #ff0;
+            color: #ff0;
+            padding: 0.85rem 1.2rem;
+            border-radius: 0;
+            font-size: 0.95rem;
+            font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.05);
+        }
+        
+        .form-group input::placeholder {
+            color: #aa0;
+            opacity: 0.7;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff0;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3), inset 0 0 15px rgba(255, 255, 0, 0.1);
+            text-shadow: 0 0 5px #ff0;
+        }
+        
+        .btn-broadcast {
+            background: #000;
+            color: #f00;
+            border: 2px solid #f00;
+            padding: 0.85rem 2rem;
+            border-radius: 0;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .btn-broadcast::before {
+            content: '>> ';
+        }
+        
+        .btn-broadcast:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            background: rgba(255, 0, 0, 0.1);
+            text-shadow: 0 0 5px #f00;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-link">Return to Control</a>
+        <div class="header-title">
+            <h1>BROADCAST TASK TO ALL AGENTS</h1>
+            <div class="warning-badge">CAUTION</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="broadcast-section">
+            <div class="warning-message">
+                <h3>WARNING</h3>
+                <p>This will execute the command on ALL connected agents simultaneously!</p>
+                <p>Ensure you have verified the command before broadcasting.</p>
+            </div>
+            
+            <form action="/broadcast/task" method="POST" id="broadcastForm">
+                <div class="predefined-commands">
+                    <div class="predefined-header">Select Predefined Operation</div>
+                    <div class="command-categories">
+                        <div class="category-section">
+                            <div class="category-title">Reverse Shells</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "shell" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="category-section">
+                            <div class="category-title">Reconnaissance</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "recon" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Privilege Escalation</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "privesc" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">File Operations</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "file" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Persistence</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "persist" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Lateral Movement</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "lateral" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Cleanup Operations</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "cleanup" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Agent Control</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "control" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="commandInput" name="command" placeholder=">> Enter command to broadcast to ALL agents..." required>
+                    <button type="submit" class="btn-broadcast" onclick="return confirm('⚠️ WARNING! This will execute on ALL agents. Are you sure?')">BROADCAST</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function setCommand(command) {
+            document.getElementById('commandInput').value = command;
+            document.getElementById('commandInput').focus();
+        }
+    </script>
+</body>
+</html>

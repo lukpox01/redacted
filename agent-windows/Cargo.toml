@@ -15,5 +15,5 @@ chrono = "0.4"
 base64 = "0.21"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winuser", "shellapi", "processthreadsapi", "handleapi", "winbase", "winsvc", "iphlpapi", "wininet"] }
+winapi = { version = "0.3", features = ["winuser", "shellapi", "processthreadsapi", "handleapi", "winbase", "winsvc", "iphlpapi", "wininet", "libloaderapi", "wingdi", "commctrl"] }
 windows-sys = { version = "0.52", features = ["Win32_Foundation", "Win32_System_Services", "Win32_System_Registry", "Win32_NetworkManagement_IpHelper", "Win32_Networking_WinInet"] }

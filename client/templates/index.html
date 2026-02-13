@@ -348,6 +348,98 @@
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
             background: rgba(0, 255, 0, 0.1);
         }
+
+        .broadcast-section {
+            background: #000;
+            border: 2px solid #0a0;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 255, 0, 0.05);
+            position: relative;
+        }
+
+        .broadcast-section::before {
+            content: '█ BROADCAST █';
+            position: absolute;
+            top: -12px;
+            left: 1rem;
+            background: #000;
+            padding: 0 0.5rem;
+            font-size: 0.7rem;
+            color: #0a0;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .broadcast-header {
+            color: #0f0;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #0f0;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 1rem;
+        }
+
+        .broadcast-header::before {
+            content: '> ';
+        }
+
+        .broadcast-form {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .broadcast-form input {
+            flex: 1;
+            background: #000;
+            border: 2px solid #0a0;
+            color: #0f0;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.95rem;
+            font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.05);
+        }
+
+        .broadcast-form input::placeholder {
+            color: #0a0;
+            opacity: 0.7;
+        }
+
+        .broadcast-form input:focus {
+            outline: none;
+            border-color: #0f0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3), inset 0 0 15px rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .broadcast-form button {
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 0.85rem 2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .broadcast-form button::before {
+            content: '> ';
+        }
+
+        .broadcast-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+            background: rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #0f0;
+        }
     </style>
 </head>
 <body>
@@ -372,6 +464,14 @@
                 <h3>Security Level</h3>
                 <div class="value">MAX</div>
             </div>
+        </div>
+        
+        <div class="broadcast-section">
+            <div class="broadcast-header">Open Web Page on All Agents</div>
+            <form action="/open-url" method="POST" class="broadcast-form">
+                <input type="url" name="url" placeholder="> Enter URL to open on all agents..." required>
+                <button type="submit">Open URL</button>
+            </form>
         </div>
         
         {% if agents.is_empty() %}

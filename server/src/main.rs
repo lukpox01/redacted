@@ -14,7 +14,7 @@ fn print_banner(state: &Arc<Mutex<State>>) {
     let mode = state.lock().unwrap().school_mode;
     let mode_name = if mode { "Restricted Mode" } else { "Full C2 Mode" };
     
-    println!("[*] C2 Server listening on http://127.0.0.1:8080");
+    println!("[*] C2 Server listening on http://0.0.0.0:8080");
     println!("[*] Server mode: {}", mode_name);
     println!("[*] Change mode with: POST /set_mode {{\"password\":\"admin\", \"school_mode\": true/false}}");
     println!();
@@ -45,7 +45,7 @@ fn print_banner(state: &Arc<Mutex<State>>) {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     let listener = TcpListener::bind(addr).await?;
     
     let state = Arc::new(Mutex::new(State::new()));

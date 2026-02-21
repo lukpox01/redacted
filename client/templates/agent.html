@@ -711,9 +711,303 @@
         .task-id::before {
             content: '// UUID: ';
         }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        body.light-mode {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        body.light-mode::before {
+            background: none;
+        }
+
+        body.light-mode .header {
+            background: #fff;
+            border-color: #333;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .header::before {
+            color: #666;
+            background: #fff;
+        }
+
+        body.light-mode .header h1 {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .back-link {
+            color: #333;
+        }
+
+        body.light-mode .back-link:hover {
+            text-shadow: none;
+        }
+
+        body.light-mode .status-online {
+            background: linear-gradient(135deg, rgba(34, 139, 34, 0.15) 0%, rgba(34, 139, 34, 0.05) 100%);
+            color: #228b22;
+            border-color: #228b22;
+            box-shadow: 0 0 10px rgba(34, 139, 34, 0.3);
+        }
+
+        body.light-mode .status-offline {
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.15) 0%, rgba(220, 20, 60, 0.05) 100%);
+            color: #dc143c;
+            border-color: #dc143c;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+        }
+
+        body.light-mode .agent-info-section,
+        body.light-mode .task-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+            border-color: #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .agent-info-section::before,
+        body.light-mode .task-section::before {
+            background: linear-gradient(90deg, #333 0%, #666 25%, #333 50%, #666 75%, #333 100%);
+        }
+
+        body.light-mode .agent-info-section::after,
+        body.light-mode .task-section::after {
+            color: #333;
+            border-color: #333;
+        }
+
+        body.light-mode .info-item {
+            background: rgba(0, 0, 0, 0.02);
+            border-left-color: #333;
+        }
+
+        body.light-mode .info-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-left-color: #000;
+        }
+
+        body.light-mode .info-item label {
+            color: #666;
+        }
+
+        body.light-mode .info-item label::before {
+            color: #333;
+        }
+
+        body.light-mode .info-item span {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .section-header {
+            border-bottom-color: #333;
+        }
+
+        body.light-mode .section-header h2 {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .form-group input {
+            background: #fff;
+            border-color: #333;
+            color: #333;
+            box-shadow: none;
+        }
+
+        body.light-mode .form-group input::placeholder {
+            color: #999;
+        }
+
+        body.light-mode .form-group input:focus {
+            border-color: #000;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .predefined-commands {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: #333;
+        }
+
+        body.light-mode .predefined-header {
+            color: #333;
+        }
+
+        body.light-mode .category-title {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .command-btn {
+            background: #fff;
+            border-color: #333;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .command-btn::before {
+            color: #666;
+        }
+
+        body.light-mode .command-btn:hover {
+            border-color: #000;
+            background: rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-mode .command-btn-name {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .command-btn-desc {
+            color: #666;
+        }
+
+        body.light-mode .btn {
+            background: #fff;
+            color: #333;
+            border-color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            background: #f5f5f5;
+        }
+
+        body.light-mode .task-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+            border-color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .task-item::before {
+            background: linear-gradient(180deg, #333 0%, #666 100%);
+        }
+
+        body.light-mode .task-item:hover {
+            border-color: #000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.light-mode .task-command {
+            color: #333;
+            text-shadow: none;
+        }
+
+        body.light-mode .task-command::before {
+            color: #666;
+        }
+
+        body.light-mode .status-done {
+            background: linear-gradient(135deg, rgba(34, 139, 34, 0.15) 0%, rgba(34, 139, 34, 0.05) 100%);
+            color: #228b22;
+            border-color: #228b22;
+            box-shadow: 0 0 10px rgba(34, 139, 34, 0.3);
+        }
+
+        body.light-mode .status-pending {
+            background: linear-gradient(135deg, rgba(255, 140, 0, 0.15) 0%, rgba(255, 140, 0, 0.05) 100%);
+            color: #ff8c00;
+            border-color: #ff8c00;
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+        }
+
+        body.light-mode .status-failed {
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.15) 0%, rgba(220, 20, 60, 0.05) 100%);
+            color: #dc143c;
+            border-color: #dc143c;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+        }
+
+        body.light-mode .task-meta {
+            color: #666;
+        }
+
+        body.light-mode .task-output {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: #333;
+        }
+
+        body.light-mode .task-output::before {
+            color: #333;
+            border-bottom-color: #ddd;
+            text-shadow: none;
+        }
+
+        body.light-mode .task-output.success {
+            color: #228b22;
+            border-color: #228b22;
+            text-shadow: none;
+        }
+
+        body.light-mode .task-output.error {
+            color: #dc143c;
+            border-color: #dc143c;
+            text-shadow: none;
+        }
+
+        body.light-mode .task-output.error::before {
+            color: #dc143c;
+            text-shadow: none;
+        }
+
+        body.light-mode .no-tasks {
+            color: #666;
+            border-color: #999;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        body.light-mode .task-id {
+            color: #666;
+        }
+
+        body.light-mode .refresh-btn,
+        body.light-mode .theme-toggle {
+            background: #fff;
+            color: #333;
+            border-color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .refresh-btn:hover,
+        body.light-mode .theme-toggle:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            background: #f5f5f5;
+        }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()">☀ Light Mode</button>
     <div class="header">
         <a href="/" class="back-link">Return to Control</a>
         <div class="agent-title">
@@ -876,6 +1170,20 @@
                                 {% endfor %}
                             </div>
                         </div>
+
+                        <div class="category-section">
+                            <div class="category-title">Protocols (School Mode)</div>
+                            <div class="command-grid">
+                                {% for cmd in predefined_commands %}
+                                {% if cmd.category == "protocol" %}
+                                <button type="button" class="command-btn" data-command="{{ cmd.command }}" onclick="setCommand(this.getAttribute('data-command'))">
+                                    <span class="command-btn-name">{{ cmd.name }}</span>
+                                    <span class="command-btn-desc">{{ cmd.description }}</span>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -931,6 +1239,31 @@
             };
             return text.replace(/[&<>"']/g, m => map[m]);
         }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.querySelector('.theme-toggle');
+            
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                btn.textContent = '☀ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.add('light-mode');
+                btn.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const btn = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                btn.textContent = '🌙 Dark Mode';
+            }
+        });
     </script>
 </body>
 </html>

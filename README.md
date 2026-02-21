@@ -1,14 +1,14 @@
-# C2 Framework - School Project / Red Team Tool
+# C2 Framework - Red Team Tool
 
 A dual-mode Command & Control framework written in Rust for educational purposes. Can operate as either:
-- **School Orchestration System**: Family-friendly classroom management tool
+- **Orchestration System**: Family-friendly classroom management tool
 - **Red Team C2 Framework**: Technical penetration testing framework
 
 ## Dual-Mode Operation
 
 The server can switch between two presentation modes:
 
-### School Orchestration Mode (Default)
+### Orchestration Mode (Default)
 - Family-friendly terminology
 - Protocol-based commands for classroom management
 - Quiz mode, DNS filtering, screen locking
@@ -37,8 +37,7 @@ Switch modes via API or control script - same underlying functionality, differen
 │   ├── system/      # System operations (info, registry, process)
 │   ├── network/     # Network operations (DNS, communication)
 │   └── protocols/   # Protocol implementations (quiz, files, revert)
-├── client/          # Web-based client UI
-└── school-control.sh # Helper script for protocol commands
+└── client/          # Web-based client UI
 ```
 
 See [STRUCTURE.md](STRUCTURE.md) for detailed architecture documentation.
@@ -150,37 +149,37 @@ The web interface provides:
 - **Real-time Results** - View command outputs and exit codes
 - **Task History** - See all tasks with their status (Pending/Done/Failed)
 
-## Quick Start - School Orchestration Mode
+## Quick Start - Orchestration Mode
 
-### Using the Control Script
+### Using Direct API Calls
 
 ```bash
 # Check current mode
-./school-control.sh mode
+curl http://localhost:8080/mode
 
 # List all connected agents
-./school-control.sh agents
+curl http://localhost:8080/agents
 
 # Activate quiz mode on an agent
-./school-control.sh quiz <agent-id> https://quiz.school.edu
+curl -X POST http://localhost:8080/protocol -d '{"agent_id":"<agent-id>","command":"PROTOCOL:QUIZ_MODE|https://quiz.example.edu","password":"admin"}'
 
 # Block all DNS except whitelisted sites
-./school-control.sh whitelist <agent-id> school.edu google.com
+curl -X POST http://localhost:8080/protocol -d '{"agent_id":"<agent-id>","command":"PROTOCOL:BLOCK_DNS_WHITELIST|example.edu,google.com","password":"admin"}'
 
-# Lock student screen
-./school-control.sh lock <agent-id>
+# Lock screen
+curl -X POST http://localhost:8080/protocol -d '{"agent_id":"<agent-id>","command":"PROTOCOL:LOCK_SCREEN","password":"admin"}'
 
 # Disable Task Manager during test
-./school-control.sh disable-taskmgr <agent-id>
+curl -X POST http://localhost:8080/protocol -d '{"agent_id":"<agent-id>","command":"PROTOCOL:DISABLE_TASK_MANAGER","password":"admin"}'
 
-# Revert all changes after class
-./school-control.sh revert <agent-id>
+# Revert all changes
+curl -X POST http://localhost:8080/revert_all -d '{"agent_id":"<agent-id>","password":"admin"}'
 
 # Switch to C2 mode for technical demonstration
-./school-control.sh set-mode c2
+curl -X POST http://localhost:8080/set_mode -d '{"mode":"c2"}'
 
 # Execute shell command
-./school-control.sh cmd <agent-id> "whoami"
+curl -X POST http://localhost:8080/add_task -d '{"agent_id":"<agent-id>","command":"whoami","password":"admin"}'
 ```
 
 ## Protocol Commands (Windows Agent)
@@ -205,7 +204,7 @@ See `agent-windows/README.md` for detailed protocol documentation.
 
 **Mode Management:**
 - `GET /mode` - Check current server mode
-- `POST /set_mode` - Switch between School/C2 mode
+- `POST /set_mode` - Switch between Orchestration/C2 mode
 
 **Agent Management:**
 - `POST /register` - Register a new agent
@@ -231,9 +230,9 @@ All communication uses JSON over HTTP. The shared `protocol` crate defines the m
 
 ## Example Workflow
 
-### School Orchestration Demo
+### Orchestration Demo
 
-1. Start the server (defaults to School Mode)
+1. Start the server (defaults to Orchestration Mode)
 2. Deploy Windows agent on classroom computers
 3. Open web client at `http://localhost:3000`
 4. View all connected student computers
@@ -245,23 +244,23 @@ All communication uses JSON over HTTP. The shared `protocol` crate defines the m
 
 ### Red Team C2 Demo
 
-1. Switch server to C2 mode: `./school-control.sh set-mode c2`
+1. Switch server to C2 mode: `curl -X POST http://localhost:8080/set_mode -d '{"mode":"c2"}'`
 2. Run agents on target systems
 3. Use web client for command execution
 4. Demonstrate file transfer capabilities
 5. Show task history and results
 6. Explain security implications
 
-## Competition Presentation Tips
+## Presentation Tips
 
-**For Non-Technical Judges:**
-- Keep server in School Orchestration Mode
+**For Non-Technical Audience:**
+- Keep server in Orchestration Mode
 - Focus on legitimate classroom use cases
 - Demonstrate Quiz Mode protocol
 - Show the safety features (revert functionality)
 - Emphasize educational applications
 
-**For Technical Judges:**
+**For Technical Audience:**
 - Show dual-mode architecture
 - Explain protocol system design
 - Demonstrate both modes
@@ -285,7 +284,7 @@ All communication uses JSON over HTTP. The shared `protocol` crate defines the m
 
 ## Security Notes
 
-⚠️ **This is a school project for educational purposes only!**
+⚠️ **This is for educational purposes only!**
 
 Current limitations (DO NOT use in production):
 - No encryption (plain HTTP)
